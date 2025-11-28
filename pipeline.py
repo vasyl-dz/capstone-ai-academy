@@ -158,12 +158,11 @@ Examples:
         run_evaluation()
     elif args.serve:
         # Start API server
-        import subprocess
-        import sys
+        import uvicorn
         print("\n🚀 Starting API server for Open WebUI integration...")
         print("   API will be available at: http://localhost:8000")
         print("   OpenAI-compatible endpoint: http://localhost:8000/v1/chat/completions\n")
-        subprocess.run([sys.executable, "api/api_server.py"])
+        uvicorn.run("api.api_server:app", host="0.0.0.0", port=8000, reload=True)
     else:
         # No arguments provided - run full pipeline
         run_full_pipeline()
