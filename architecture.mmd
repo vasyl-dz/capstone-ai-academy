@@ -1,0 +1,153 @@
+```mermaid
+graph TB
+    %% Main Components
+    subgraph User["👤 User Interface"]
+        CLI[Command Line Interface]
+        OpenWebUI[Open WebUI Browser]
+    end
+
+    subgraph Pipeline["📋 Pipeline Orchestrator"]
+        Main[pipeline.py]
+        Main --> BuildRAG[build_rag<br/>Steps 1-3]
+        Main --> RunChatbot[run_chatbot<br/>Step 4]
+        Main --> RunEval[run_evaluation<br/>Step 5]
+        Main --> ServeAPI[serve<br/>API Server]
+    end
+
+    %% Step 1: Parse
+    subgraph Parse["📄 Step 1: Parse"]
+        ParsePy[parse.py]
+        ParsePDF[PDF Parser<br/>PyPDFLoader]
+        ParseAudio[Audio Parser<br/>Whisper]
+        ParsePy --> ParsePDF
+        ParsePy --> ParseAudio
+    end
+
+    %% Step 2: Chunk
+    subgraph Chunk["✂️ Step 2: Chunk"]
+        ChunkPy[chunk.py]
+        RecursiveSplitter[RecursiveCharacterTextSplitter<br/>Size: 1000, Overlap: 150]
+        ChunkPy --> RecursiveSplitter
+    end
+
+    %% Step 3: Embed
+    subgraph Embed["🔢 Step 3: Embed"]
+        EmbedPy[embed.py]
+        BGE[BGE Embeddings<br/>BAAI/bge-base-en-v1.5]
+        ChromaDB[(ChromaDB<br/>Vector Store)]
+        EmbedPy --> BGE
+        BGE --> ChromaDB
+    end
+
+    %% Step 4: Chatbot
+    subgraph Chatbot["💬 Step 4: Chatbot"]
+        ChatbotPy[chatbot.py<br/>RAGChatbot Class]
+        Retrieve[retrieve<br/>Vector Search]
+        Generate[generate_answer]
+        Reflect[answer_with_reflection]
+        ChatbotPy --> Retrieve
+        Retrieve --> Generate
+        Generate --> Reflect
+    end
+
+    %% Agents
+    subgraph Agents["🤖 AI Agents"]
+        ReasoningAgent[reasoning_agent.py<br/>ReasoningAgent]
+        ReflectionAgent[reflection_agent.py<br/>ReflectionAgent]
+        
+        ReasoningAgent --> Ollama[Ollama LLM<br/>llama3.1:8b]
+        ReflectionAgent --> Ollama
+        
+        ReasoningAgent --> Memory[Conversation Memory]
+        ReasoningAgent --> ToolCalling[Tool Calling System]
+    end
+
+    %% Tools
+    subgraph Tools["🔧 Tools"]
+        GitHubTool[github_tool.py<br/>GitHub Repository Analysis]
+        GitHubAPI[GitHub API<br/>PyGithub]
+        GitHubTool --> GitHubAPI
+    end
+
+    %% API Server
+    subgraph API["🌐 API Server"]
+        APIServer[api_server.py<br/>FastAPI]
+        OpenAIEndpoint[v1/chat/completions<br/>OpenAI Compatible]
+        ModelsEndpoint[v1/models]
+        QueryEndpoint[query]
+        
+        APIServer --> OpenAIEndpoint
+        APIServer --> ModelsEndpoint
+        APIServer --> QueryEndpoint
+    end
+
+    %% Step 5: Evaluate
+    subgraph Evaluate["📊 Step 5: Evaluate"]
+        EvalPy[evaluate.py]
+        TestSuite[Test Questions]
+        Metrics[Performance Metrics]
+        EvalPy --> TestSuite
+        TestSuite --> Metrics
+    end
+
+    %% Data Flow
+    CLI --> Main
+    OpenWebUI --> API
+    
+    BuildRAG --> ParsePy
+    ParsePy --> |text files| ChunkPy
+    ChunkPy --> |chunks| EmbedPy
+    EmbedPy --> ChromaDB
+    
+    RunChatbot --> ChatbotPy
+    ChromaDB --> Retrieve
+    Generate --> ReasoningAgent
+    Reflect --> ReflectionAgent
+    
+    ToolCalling --> GitHubTool
+    
+    ServeAPI --> APIServer
+    APIServer --> ChatbotPy
+    
+    RunEval --> EvalPy
+    EvalPy --> ChatbotPy
+
+    %% External Services
+    subgraph External["☁️ External Services"]
+        OllamaService[Ollama Service<br/>Local LLM Server]
+        GitHubService[GitHub.com<br/>Repository Data]
+    end
+    
+    Ollama -.-> OllamaService
+    GitHubAPI -.-> GitHubService
+
+    %% Data Storage
+    subgraph Storage["💾 Data Storage"]
+        DataFolder[data/<br/>Input Files]
+        OutputFolder[output/<br/>Parsed Text]
+        ChunksFolder[chunks/<br/>Text Chunks]
+        ChromaFolder[chroma_db/<br/>Vector DB]
+    end
+    
+    ParsePDF --> OutputFolder
+    ParseAudio --> OutputFolder
+    RecursiveSplitter --> ChunksFolder
+    ChromaDB --> ChromaFolder
+    DataFolder --> ParsePDF
+    DataFolder --> ParseAudio
+
+    %% Styling
+    classDef pipeline fill:#e1f5ff,stroke:#01579b,stroke-width:2px
+    classDef agent fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    classDef tool fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    classDef api fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px
+    classDef storage fill:#fce4ec,stroke:#880e4f,stroke-width:2px
+    classDef external fill:#f1f8e9,stroke:#33691e,stroke-width:2px
+    
+    class Main,BuildRAG,RunChatbot,RunEval,ServeAPI pipeline
+    class ReasoningAgent,ReflectionAgent,Ollama,Memory,ToolCalling agent
+    class GitHubTool,GitHubAPI tool
+    class APIServer,OpenAIEndpoint,ModelsEndpoint,QueryEndpoint api
+    class DataFolder,OutputFolder,ChunksFolder,ChromaFolder,ChromaDB storage
+    class OllamaService,GitHubService external
+```

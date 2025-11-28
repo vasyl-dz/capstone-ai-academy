@@ -1,0 +1,12 @@
+langchain-community
+langchain-text-splitters
+openai-whisper
+sentence-transformers
+chromadb
+ollama
+PyGithub
+langsmith
+python-dotenv
+openevals
+fastapi
+uvicorn[standard]
